@@ -7,48 +7,39 @@ function App() {
   return (
     <>
       <Canvas shadows>
-        <ScrollControls pages={3} damping={0.2}>
+        {/* We use 2 pages of scroll to go from top view to monitor view */}
+        <ScrollControls pages={2} damping={0.2}>
           <Scene />
           
-          {/* HTML Overlay tied to scroll */}
-          <Scroll html style={{ width: '100%', height: '100%' }}>
-            {/* Page 1 */}
-            <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-              <h1 style={{ color: 'white', textShadow: '0 4px 10px rgba(0,0,0,0.5)', margin: 0, fontSize: '4rem', zIndex: 10 }}>Hello, I'm a Developer</h1>
-              <p style={{ color: '#00ffcc', fontSize: '1.5rem', fontWeight: 600 }}>Scroll down to see my world</p>
-            </div>
-            
-            {/* Page 2 */}
-            <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-              <h1 style={{ color: 'white', textShadow: '0 4px 10px rgba(0,0,0,0.5)', margin: 0, fontSize: '4rem', zIndex: 10 }}>My Portfolio</h1>
-              <p style={{ color: '#cbd5e1', fontSize: '1.5rem', maxWidth: '600px', textAlign: 'center' }}>
-                I build premium, interactive experiences.
-              </p>
-            </div>
-            
-            {/* Page 3 */}
-            <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', paddingLeft: '10vw' }}>
-              <h1 style={{ color: 'white', textShadow: '0 4px 10px rgba(0,0,0,0.5)', margin: 0, fontSize: '3rem', zIndex: 10 }}>Time for Coffee</h1>
-              <p style={{ color: '#cbd5e1', fontSize: '1.2rem', maxWidth: '400px' }}>
-                And time to get to work.
-                Check out my resume by downloading the PDF from my repository!
-              </p>
-              <a 
-                href="/resume.pdf" 
-                target="_blank" 
-                style={{ 
-                  marginTop: '20px', 
-                  padding: '12px 24px', 
-                  backgroundColor: '#ff4444', 
-                  color: 'white', 
-                  textDecoration: 'none', 
-                  borderRadius: '8px',
-                  fontWeight: 'bold',
-                  pointerEvents: 'auto'
-                }}
-              >
-                View Resume
-              </a>
+          {/* Foreground Normal HTML Website Overlay */}
+          <Scroll html style={{ width: '100vw' }}>
+            <div className="website-content">
+              
+              {/* Top Page / Landing */}
+              <div className="section hero">
+                <h1>Hello! I am Aditya.</h1>
+                <h2>Software Engineer</h2>
+                <p>
+                  I build scalable backend systems, robust distributed architectures, and AI-driven workflows.
+                  With 4 years of experience using Java, Spring Boot, and AWS, I turn complex problems into highly-available solutions.
+                </p>
+                <p><em>↓ Scroll down to view my workspace ↓</em></p>
+              </div>
+
+              {/* Bottom Page / At the desk */}
+              <div className="section details">
+                <div className="details-box">
+                  <h3>My Resume</h3>
+                  <p><strong>Autodesk</strong> - Software Development Engineer 2</p>
+                  <p><strong>KIIT University</strong> - BTech Computer Science</p>
+                  <p><strong>AWS</strong> - Certified Cloud Practitioner</p>
+                  
+                  <a href="/portfolio/resume.pdf" target="_blank" rel="noreferrer" className="download-btn">
+                    Download Full Resume
+                  </a>
+                </div>
+              </div>
+
             </div>
           </Scroll>
         </ScrollControls>

@@ -5,4 +5,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   base: '/portfolio/',
   plugins: [react()],
+  server: {
+    // Removed ignored watch rule because it breaks static serving
+  }
 })
