@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react'
 import { useGraph } from '@react-three/fiber'
-import { useGLTF, useAnimations } from '@react-three/drei'
+import { useGLTF, useAnimations, Text } from '@react-three/drei'
 import { SkeletonUtils } from 'three-stdlib'
 
 export function ComputerDeskArea(props) {
@@ -15,7 +15,15 @@ export function ComputerDeskArea(props) {
       const firstAction = actions[Object.keys(actions)[0]]
       firstAction.play()
     }
-  }, [actions])
+    
+    // Enable shadows on all meshes in the model
+    scene.traverse((node) => {
+      if (node.isMesh) {
+        node.castShadow = true;
+        node.receiveShadow = true;
+      }
+    });
+  }, [actions, scene])
 
   return (
     <group ref={group} {...props} dispose={null}>
@@ -32,7 +40,65 @@ export function ComputerDeskArea(props) {
               
               <group name="MONITOR_4" position={[0.048, 0.928, 0.305]} scale={0.605}>
                 <mesh name="Object_8" geometry={nodes.Object_8.geometry} material={materials.peopleColors} />
-                <mesh name="Object_9" geometry={nodes.Object_9.geometry} material={materials.material_3} />
+                {/* Override the Blender screenshot texture with a dark matte screen to prevent white blowout */}
+                <mesh name="Object_9" geometry={nodes.Object_9.geometry}>
+                  <meshStandardMaterial color="#010308" roughness={0.9} />
+                </mesh>
+                
+                {/* Pure WebGL Text - Never fails to render! */}
+                {/* Micro-adjusted Y to 0.935 for pixel-perfect padding */}
+                <group position={[0, 0.935, 0.12]} rotation={[-0.2, 0, 0]} scale={0.55}>
+                   <Text position={[0, 0.18, 0]} fontSize={0.07} color="#ffffff" anchorX="center">
+                     ADITYA CHOUDHARY
+                   </Text>
+                   <Text position={[0, 0.08, 0]} fontSize={0.035} color="#ff8a65" anchorX="center">
+                     SOFTWARE ENGINEER (4+ YOE)
+                   </Text>
+                   
+                   <Text position={[-0.45, -0.05, 0]} fontSize={0.03} color="#ffffff" anchorX="left">
+                     SUMMARY
+                   </Text>
+                   <Text position={[-0.45, -0.11, 0]} fontSize={0.022} color="#cccccc" anchorX="left" maxWidth={0.9} lineHeight={1.3}>
+                     Backend systems engineer using Java, Spring Boot, and AWS. Expertise in distributed systems, large-scale data processing, and AI-driven agentic workflows.
+                   </Text>
+                   
+                   <Text position={[-0.45, -0.25, 0]} fontSize={0.03} color="#ffffff" anchorX="left">
+                     SKILLS
+                   </Text>
+                   <Text position={[-0.45, -0.31, 0]} fontSize={0.022} color="#cccccc" anchorX="left" maxWidth={0.9} lineHeight={1.3}>
+                     Java, Python, JS | Spring Boot, REST APIs | AWS (EC2, S3, Lambda) | React | LangChain, AI Integrations
+                   </Text>
+                   
+                   <Text position={[-0.45, -0.45, 0]} fontSize={0.03} color="#ffffff" anchorX="left">
+                     EXPERIENCE
+                   </Text>
+                   <Text position={[-0.45, -0.52, 0]} fontSize={0.022} color="#ffaa88" anchorX="left">
+                     Autodesk (SDE 2)
+                   </Text>
+                   <Text position={[-0.43, -0.59, 0]} fontSize={0.02} color="#aaaaaa" anchorX="left" maxWidth={0.88} lineHeight={1.2}>
+                     • Designed AI-powered Agent using MCP tools to automate workflows, reducing manual effort by 6x.
+                   </Text>
+                   <Text position={[-0.43, -0.66, 0]} fontSize={0.02} color="#aaaaaa" anchorX="left" maxWidth={0.88} lineHeight={1.2}>
+                     • Architected a distributed Spring Batch system, scaling parallel conversions for 1M+ projects.
+                   </Text>
+                   
+                   <Text position={[-0.45, -0.77, 0]} fontSize={0.022} color="#ffaa88" anchorX="left">
+                     Autodesk (SDE 1 & Intern)
+                   </Text>
+                   <Text position={[-0.43, -0.84, 0]} fontSize={0.02} color="#aaaaaa" anchorX="left" maxWidth={0.88} lineHeight={1.2}>
+                     • Migrated legacy services to AWS. Built 20+ REST APIs. Handled prod incidents for 99% uptime.
+                   </Text>
+                   <Text position={[-0.43, -0.91, 0]} fontSize={0.02} color="#aaaaaa" anchorX="left" maxWidth={0.88} lineHeight={1.2}>
+                     • Built processing jobs for migrating 30M+ records with zero downtime.
+                   </Text>
+
+                   <Text position={[-0.45, -1.05, 0]} fontSize={0.03} color="#ffffff" anchorX="left">
+                     EDUCATION & CERTS
+                   </Text>
+                   <Text position={[-0.45, -1.12, 0]} fontSize={0.022} color="#cccccc" anchorX="left" maxWidth={0.9}>
+                     KIIT University (BTech CS) | AWS Certified Cloud Practitioner
+                   </Text>
+                </group>
               </group>
 
               <group name="TABLE_5" position={[0.048, -0.002, 0.572]} scale={0.605}>

@@ -4,7 +4,7 @@ body, html, #root {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background-color: #3e2723;
+  background-color: #000000;
   font-family: 'Inter', 'Roboto', sans-serif;
   color: #fff;
 }
@@ -12,35 +12,50 @@ body, html, #root {
 canvas {
   width: 100vw !important;
   height: 100vh !important;
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 0;
+  display: block;
 }
 
 /* Foreground Website Overlay */
-.website-content {
-  position: relative;
+.website-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
   z-index: 10;
-  width: 100%;
-  pointer-events: none; /* Let clicks pass through to 3D scene where needed */
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
 }
 
-/* Individual sections */
 .section {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100vw;
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
   padding: 10%;
   box-sizing: border-box;
-  pointer-events: auto; /* Re-enable clicks for text/buttons */
+  pointer-events: auto;
+  transition: opacity 0.8s ease-in-out, transform 0.8s ease-in-out;
+}
+
+.fade-in {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.fade-out {
+  opacity: 0;
+  transform: translateY(-20px);
+  pointer-events: none;
 }
 
 .hero {
-  background: linear-gradient(to bottom, rgba(62, 39, 35, 0.9), transparent);
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent);
 }
 
 .hero h1 {
@@ -64,35 +79,57 @@ canvas {
   color: #e0e0e0;
 }
 
-.details {
-  background: linear-gradient(to top, rgba(62, 39, 35, 0.9), transparent);
-  align-items: flex-end;
-  text-align: right;
+button {
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
 }
 
-.details-box {
-  background: rgba(20, 15, 10, 0.85);
-  padding: 2rem 3rem;
-  border-radius: 12px;
-  border: 1px solid #5d4037;
-  max-width: 500px;
-  backdrop-filter: blur(10px);
-}
-
-.details h3 {
-  font-size: 2rem;
-  color: #ff8a65;
-  margin-top: 0;
-}
-
-.details p {
+.enter-btn {
+  margin-top: 2rem;
+  padding: 1rem 2rem;
   font-size: 1.2rem;
-  line-height: 1.6;
+  background-color: #00ffff;
+  color: #000;
+  font-weight: bold;
+  border-radius: 8px;
+  transition: transform 0.2s, background-color 0.2s;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
 }
 
-.download-btn {
-  display: inline-block;
-  margin-top: 1.5rem;
+.enter-btn:hover {
+  transform: scale(1.05);
+  background-color: #e0ffff;
+}
+
+.details-overlay {
+  pointer-events: none;
+  background: transparent;
+}
+
+.back-btn-floating {
+  position: absolute;
+  top: 40px;
+  left: 40px;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid #555;
+  color: #fff;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  backdrop-filter: blur(5px);
+  pointer-events: auto;
+}
+
+.back-btn-floating:hover {
+  background: rgba(0,255,255,0.2);
+  border-color: #00ffff;
+}
+
+.download-btn-floating {
+  position: absolute;
+  bottom: 40px;
+  right: 40px;
   background-color: #ff5722;
   color: white;
   padding: 1rem 2rem;
@@ -100,10 +137,12 @@ canvas {
   font-size: 1.2rem;
   border-radius: 8px;
   font-weight: bold;
+  pointer-events: auto;
+  box-shadow: 0 0 20px rgba(255, 87, 34, 0.4);
   transition: transform 0.2s, background-color 0.2s;
 }
 
-.download-btn:hover {
+.download-btn-floating:hover {
   transform: scale(1.05);
   background-color: #f4511e;
 }

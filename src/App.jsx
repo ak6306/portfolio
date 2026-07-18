@@ -1,49 +1,44 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { ScrollControls, Scroll } from '@react-three/drei';
 import { Scene } from './Scene';
+import './index.css';
 
 function App() {
+  const [zoomed, setZoomed] = useState(false);
+
   return (
     <>
       <Canvas shadows>
-        {/* We use 2 pages of scroll to go from top view to monitor view */}
-        <ScrollControls pages={2} damping={0.2}>
-          <Scene />
-          
-          {/* Foreground Normal HTML Website Overlay */}
-          <Scroll html style={{ width: '100vw' }}>
-            <div className="website-content">
-              
-              {/* Top Page / Landing */}
-              <div className="section hero">
-                <h1>Hello! I am Aditya.</h1>
-                <h2>Software Engineer</h2>
-                <p>
-                  I build scalable backend systems, robust distributed architectures, and AI-driven workflows.
-                  With 4 years of experience using Java, Spring Boot, and AWS, I turn complex problems into highly-available solutions.
-                </p>
-                <p><em>↓ Scroll down to view my workspace ↓</em></p>
-              </div>
-
-              {/* Bottom Page / At the desk */}
-              <div className="section details">
-                <div className="details-box">
-                  <h3>My Resume</h3>
-                  <p><strong>Autodesk</strong> - Software Development Engineer 2</p>
-                  <p><strong>KIIT University</strong> - BTech Computer Science</p>
-                  <p><strong>AWS</strong> - Certified Cloud Practitioner</p>
-                  
-                  <a href="/portfolio/resume.pdf" target="_blank" rel="noreferrer" className="download-btn">
-                    Download Full Resume
-                  </a>
-                </div>
-              </div>
-
-            </div>
-          </Scroll>
-        </ScrollControls>
+        <Scene zoomed={zoomed} />
       </Canvas>
+      
+      {/* Foreground Normal HTML Website Overlay */}
+      <div className="website-overlay">
+        
+        {/* Landing Page */}
+        <div className={`section hero ${zoomed ? 'fade-out' : 'fade-in'}`}>
+          <h1>Hello! I am Aditya.</h1>
+          <h2>Software Engineer</h2>
+          <p>
+            I build scalable backend systems, robust distributed architectures, and AI-driven workflows.
+            With 4 years of experience using Java, Spring Boot, and AWS, I turn complex problems into highly-available solutions.
+          </p>
+          <button className="enter-btn" onClick={() => setZoomed(true)}>
+            View Workspace
+          </button>
+        </div>
+
+        {/* Resume Details Page */}
+        <div className={`section details-overlay ${!zoomed ? 'fade-out' : 'fade-in'}`}>
+           <button className="back-btn-floating" onClick={() => setZoomed(false)}>
+              ← Back to Top
+           </button>
+           <a href="/portfolio/resume.pdf" target="_blank" rel="noreferrer" className="download-btn-floating">
+              Download PDF
+           </a>
+        </div>
+
+      </div>
     </>
   );
 }
