@@ -146,3 +146,24 @@ button {
   transform: scale(1.05);
   background-color: #f4511e;
 }
+
+.credits-overlay {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.3);
+  pointer-events: auto;
+  z-index: 100;
+  transition: color 0.3s;
+}
+
+.credits-overlay a {
+  color: rgba(255, 255, 255, 0.5);
+  text-decoration: none;
+}
+
+.credits-overlay a:hover {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: underline;
+}

@@ -38,6 +38,11 @@ function App() {
            </a>
         </div>
 
+        {/* 3D Model Credits */}
+        <div className="credits-overlay">
+          "<a href="https://skfb.ly/orzBS" target="_blank" rel="noreferrer">COMPUTER-DESK-AREA</a>" by bhaveshchalke4513 is licensed under <a href="http://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">Creative Commons Attribution</a>.
+        </div>
+
       </div>
     </>
   );
