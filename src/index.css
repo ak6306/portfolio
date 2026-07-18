@@ -1,0 +1,38 @@
+body, html, #root {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #0f172a;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Ensure canvas takes full screen */
+canvas {
+  width: 100vw !important;
+  height: 100vh !important;
+}
+
+.html-content {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  pointer-events: none;
+}
+
+h1 {
+  font-size: 4rem;
+  margin: 0;
+  text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
+
+p {
+  font-size: 1.5rem;
+  margin: 10px 0;
+  opacity: 0.8;
+}
