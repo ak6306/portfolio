@@ -1,23 +1,47 @@
 import { useRef, useEffect } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { ComputerDeskArea } from './ComputerDeskArea';
 import { CodeParticles } from './CodeParticles';
 
-export function Scene({ zoomed }) {
-  const tempCamPos = useRef(new THREE.Vector3());
-  const tempCamLookAt = useRef(new THREE.Vector3());
-  const spotLightRef = useRef();
-  const screenLightRef = useRef();
-  
-  // Keep track of our current animation progress (0 = zoomed out, 1 = zoomed in)
-  const animProgress = useRef(0);
-  
-  // Track mouse securely at the window level
+// One camera pose per section, in document scroll order.
+const KEYFRAMES = [
+  { pos: new THREE.Vector3(0, 3.4, 2.6), lookAt: new THREE.Vector3(0, -0.6, -2.0) }, // hero
+  { pos: new THREE.Vector3(-1.3, 2.2, 1.8), lookAt: new THREE.Vector3(0, -0.6, -2.0) }, // about
+  { pos: new THREE.Vector3(-0.9, 1.3, 1.1), lookAt: new THREE.Vector3(0.05, -0.3, -2.1) }, // skills
+  { pos: new THREE.Vector3(0.4, 0.9, 0.9), lookAt: new THREE.Vector3(0.1, -0.1, -2.2) }, // experience
+  { pos: new THREE.Vector3(0.9, 0.6, 0.4), lookAt: new THREE.Vector3(0.1, 0.0, -2.3) }, // projects
+  { pos: new THREE.Vector3(0.1, 0.2, -1.0), lookAt: new THREE.Vector3(0.1, 0.1, -2.5) }, // resume (on-screen)
+  { pos: new THREE.Vector3(0, 1.8, 2.4), lookAt: new THREE.Vector3(0, -0.4, -2.0) }, // contact
+];
+
+// Fraction of each section's scroll range the camera spends holding still at
+// that section's pose before it starts easing toward the next one. Keeping a
+// long dwell means the camera is rock-steady while someone reads a section
+// (crucial for the resume section) and only moves during the hand-off.
+const DWELL = 0.65;
+const FOLLOW_SPEED = 4;
+
+function smoothstep(t) {
+  const x = THREE.MathUtils.clamp(t, 0, 1);
+  return x * x * (3 - 2 * x);
+}
+
+export function Scene({ scrollProgress }) {
+  const camPos = useRef(new THREE.Vector3().copy(KEYFRAMES[0].pos));
+  const camLookAt = useRef(new THREE.Vector3().copy(KEYFRAMES[0].lookAt));
+  const targetPos = useRef(new THREE.Vector3());
+  const targetLookAt = useRef(new THREE.Vector3());
+
+  const keyLightRef = useRef();
+  const screenGlowRef = useRef();
+
   const mouse = useRef(new THREE.Vector2(0, 0));
-  const flashTimer = useRef(0);
+  const reducedMotion = useRef(false);
 
   useEffect(() => {
+    reducedMotion.current = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
     const handleMouseMove = (e) => {
       mouse.current.x = (e.clientX / window.innerWidth) * 2 - 1;
       mouse.current.y = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -27,117 +51,81 @@ export function Scene({ zoomed }) {
   }, []);
 
   useFrame((state, delta) => {
-    // Increase delta multiplier from 3 to 10 for a much snappier animation
-    animProgress.current = THREE.MathUtils.lerp(animProgress.current, zoomed ? 1 : 0, delta * 10);
-    const offset = animProgress.current;
-    
-    // Start position: Zoomed out, high up
-    const startPos = new THREE.Vector3(0, 4, 1.5);
-    const startLookAt = new THREE.Vector3(0, -1.0, -2.0);
-    
-    // End position: Centered on the monitor
-    const endPos = new THREE.Vector3(0.1, 0.2, -1.0);
-    const endLookAt = new THREE.Vector3(0.1, 0.1, -2.5);
+    const numSections = KEYFRAMES.length;
+    const progress = scrollProgress.get();
+    const sectionFloat = THREE.MathUtils.clamp(progress, 0, 0.999999) * numSections;
+    const sectionIndex = Math.min(Math.floor(sectionFloat), numSections - 1);
+    const nextIndex = Math.min(sectionIndex + 1, numSections - 1);
+    const localT = sectionFloat - sectionIndex;
+    const blend = smoothstep((localT - DWELL) / (1 - DWELL));
 
-    const currentPos = tempCamPos.current.lerpVectors(startPos, endPos, offset);
-    const currentLookAt = tempCamLookAt.current.lerpVectors(startLookAt, endLookAt, offset);
+    targetPos.current.lerpVectors(KEYFRAMES[sectionIndex].pos, KEYFRAMES[nextIndex].pos, blend);
+    targetLookAt.current.lerpVectors(KEYFRAMES[sectionIndex].lookAt, KEYFRAMES[nextIndex].lookAt, blend);
 
-    // Set camera immediately to current step
-    state.camera.position.copy(currentPos);
-    state.camera.lookAt(currentLookAt);
+    // A whisper of mouse parallax during the intro, fully faded out by the
+    // Skills section so it never fights the precise resume-screen framing.
+    if (!reducedMotion.current) {
+      const parallaxStrength = Math.max(0, 1 - sectionFloat / 2) * 0.15;
+      targetPos.current.x += mouse.current.x * parallaxStrength;
+      targetPos.current.y += mouse.current.y * parallaxStrength * 0.6;
+    }
 
-    // Interactive Flashlight Logic!
-    if (spotLightRef.current) {
-      const { raycaster } = state;
-      
-      // 1. Raycast to find exactly where the mouse is pointing on the virtual floor
-      raycaster.setFromCamera(mouse.current, state.camera);
-      const floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 1);
-      const intersectPoint = new THREE.Vector3();
-      const hit = raycaster.ray.intersectPlane(floorPlane, intersectPoint);
-      
-      if (!hit) {
-        intersectPoint.set(0, -1, -2); // Fallback to center of desk if looking away from floor
-      }
-      
-      // 2. Define the 'Flashlight' states (when on the landing page)
-      // Flashlight is held slightly below and to the right of the camera
-      const flashlightPos = new THREE.Vector3(state.camera.position.x + 0.5, state.camera.position.y - 0.5, state.camera.position.z + 0.2);
-      const flashlightTarget = intersectPoint;
-      let flashlightAngle = 0.07; // Much smaller radius!
-      let flashlightIntensity = 180; // Standard torch brightness
+    const followSpeed = reducedMotion.current ? 14 : FOLLOW_SPEED;
+    const damp = 1 - Math.exp(-delta * followSpeed);
+    camPos.current.lerp(targetPos.current, damp);
+    camLookAt.current.lerp(targetLookAt.current, damp);
 
-      // Rare random ambient flashes (30-40 second frequency)
-      if (!zoomed && offset < 0.1) {
-        if (flashTimer.current > 0) {
-          flashTimer.current -= delta;
-          // During a flash, the light glitches, widens its beam, and surges brightly
-          flashlightIntensity = 300 + Math.random() * 300; 
-          flashlightAngle = 0.15 + Math.random() * 0.2;
-        } else if (Math.random() > 0.9996) { // ~40 seconds average at 60fps
-          flashTimer.current = 0.05 + Math.random() * 0.08;
-        }
-      }
+    state.camera.position.copy(camPos.current);
+    state.camera.lookAt(camLookAt.current);
 
-      // 3. Define the 'Ceiling Light' states (when zoomed in to workspace)
-      const ceilingLightPos = new THREE.Vector3(0, 6, -0.5);
-      const ceilingLightTarget = new THREE.Vector3(0, -1, -2); // Centered on desk
-      const ceilingLightAngle = 0.4; // Wide beam illuminating the whole desk
-      const ceilingLightIntensity = 400; // Very bright
+    if (keyLightRef.current) {
+      keyLightRef.current.target.updateMatrixWorld();
+    }
 
-      // 4. Apply the light properties based on state
-      if (!zoomed) {
-        // Flashlight mode: strictly follows mouse
-        spotLightRef.current.position.copy(flashlightPos);
-        spotLightRef.current.target.position.copy(flashlightTarget);
-        spotLightRef.current.angle = flashlightAngle;
-        spotLightRef.current.intensity = flashlightIntensity;
-      } else {
-        // Ceiling mode: Instantly snap the light to the ceiling so the scene lights up immediately!
-        spotLightRef.current.position.copy(ceilingLightPos);
-        spotLightRef.current.target.position.copy(ceilingLightTarget);
-        spotLightRef.current.angle = ceilingLightAngle;
-        spotLightRef.current.intensity = ceilingLightIntensity;
-      }
-      
-      spotLightRef.current.target.updateMatrixWorld();
+    // Gentle "monitor glow" breathing so the screen light feels alive without flickering.
+    if (screenGlowRef.current) {
+      screenGlowRef.current.intensity = 5.5 + Math.sin(state.clock.elapsedTime * 0.6) * 0.5;
     }
   });
 
   return (
     <>
-      <color attach="background" args={['#000000']} />
-      <fog attach="fog" args={['#000000', 3, 10]} />
-      
-      {/* Tiny ambient light just so the shadows aren't pitch black voids */}
-      <ambientLight intensity={0.05} />
-      
-      {/* Dramatic Cinematic Spotlight */}
-      <spotLight 
-        ref={spotLightRef}
-        position={[0, 6, -0.5]} 
-        angle={0.4} 
-        penumbra={0.3} 
-        color="#ffffff"
+      <color attach="background" args={['#0a0c11']} />
+      <fog attach="fog" args={['#0a0c11', 4, 15]} />
+
+      {/* Soft ambient fill so nothing falls into a pure black void */}
+      <ambientLight intensity={0.2} />
+
+      {/* Key light: warm desk-lamp softbox from above-front */}
+      <spotLight
+        ref={keyLightRef}
+        position={[1.2, 3.6, 1.5]}
+        target-position={[0, -0.6, -2]}
+        angle={0.55}
+        penumbra={0.6}
+        intensity={150}
+        color="#ffd9b3"
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
         shadow-bias={-0.0001}
       />
 
-      {/* Code Particles for the landing page (fades out when zoomed) */}
-      <CodeParticles opacity={!zoomed ? 1 : 0} />
+      {/* Rim light: cool fill from behind-left for depth separation */}
+      <spotLight position={[-2.5, 2.2, -3.5]} angle={0.6} penumbra={0.8} intensity={70} color="#4fd1e8" />
 
-      {/* The realistic 3D Model */}
+      {/* Warm ambient glow the monitor itself would cast onto the desk */}
+      <pointLight ref={screenGlowRef} position={[0.05, 0.9, -1.9]} intensity={5.5} distance={3} color="#ff8a65" />
+
+      <CodeParticles scrollProgress={scrollProgress} />
+
       <group position={[0, -1, -2]}>
         <ComputerDeskArea />
       </group>
 
-      {/* Floor */}
       <mesh position={[0, -2, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[100, 100]} />
-        {/* Lighter color so the spotlight circle is highly visible, but stays black in the dark */}
-        <meshStandardMaterial color="#aaaaaa" roughness={0.9} />
+        <meshStandardMaterial color="#2c313c" roughness={0.9} />
       </mesh>
     </>
   );

@@ -1,48 +1,39 @@
-import React, { useState } from 'react';
 import { Canvas } from '@react-three/fiber';
+import { useScroll } from 'framer-motion';
 import { Scene } from './Scene';
+import { Nav } from './components/Nav';
+import { Hero } from './sections/Hero';
+import { About } from './sections/About';
+import { Skills } from './sections/Skills';
+import { Experience } from './sections/Experience';
+import { Projects } from './sections/Projects';
+import { Resume } from './sections/Resume';
+import { Contact } from './sections/Contact';
 import './index.css';
 
 function App() {
-  const [zoomed, setZoomed] = useState(false);
+  const { scrollYProgress } = useScroll();
 
   return (
     <>
-      <Canvas shadows>
-        <Scene zoomed={zoomed} />
-      </Canvas>
-      
-      {/* Foreground Normal HTML Website Overlay */}
-      <div className="website-overlay">
-        
-        {/* Landing Page */}
-        <div className={`section hero ${zoomed ? 'fade-out' : 'fade-in'}`}>
-          <h1>Hello! I am Aditya.</h1>
-          <h2>Software Engineer</h2>
-          <p>
-            I build scalable backend systems, robust distributed architectures, and AI-driven workflows.
-            With 4 years of experience using Java, Spring Boot, and AWS, I turn complex problems into highly-available solutions.
-          </p>
-          <button className="enter-btn" onClick={() => setZoomed(true)}>
-            View Workspace
-          </button>
-        </div>
+      <div className="scene-fixed">
+        <Canvas shadows>
+          <Scene scrollProgress={scrollYProgress} />
+        </Canvas>
+      </div>
+      <div className="vignette" />
+      <div className="grain-static" />
 
-        {/* Resume Details Page */}
-        <div className={`section details-overlay ${!zoomed ? 'fade-out' : 'fade-in'}`}>
-           <button className="back-btn-floating" onClick={() => setZoomed(false)}>
-              ← Back to Top
-           </button>
-           <a href="/portfolio/resume.pdf" target="_blank" rel="noreferrer" className="download-btn-floating">
-              Download PDF
-           </a>
-        </div>
+      <Nav scrollYProgress={scrollYProgress} />
 
-        {/* 3D Model Credits */}
-        <div className="credits-overlay">
-          "<a href="https://skfb.ly/orzBS" target="_blank" rel="noreferrer">COMPUTER-DESK-AREA</a>" by bhaveshchalke4513 is licensed under <a href="http://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">Creative Commons Attribution</a>.
-        </div>
-
+      <div className="page">
+        <Hero />
+        <About />
+        <Skills />
+        <Experience />
+        <Projects />
+        <Resume />
+        <Contact />
       </div>
     </>
   );
